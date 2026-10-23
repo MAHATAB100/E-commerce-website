@@ -1,5 +1,6 @@
-
 import { Link, NavLink } from "react-router-dom";
+
+
 import {
   ShoppingBag,
   Search,
@@ -57,13 +58,14 @@ export default function Navbar() {
 
       
         <div className="flex-none gap-1 sm:gap-2">
-          <Link
-            to="/shop"
-            aria-label="Search products"
-            className="btn btn-ghost btn-circle"
-          >
-            <Search size={20} />
-          </Link>
+        <Link
+  to="/shop?focusSearch=1"
+  aria-label="Search products"
+  title="Search products"
+  className="btn btn-ghost btn-circle"
+>
+  <Search size={20} />
+</Link>
 
           <Link
             to="/login"
