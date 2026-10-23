@@ -13,7 +13,7 @@ export default function Home() {
     <>
       <PromoBanner />
 
-      {/* Hero section */}
+     
       <section className="overflow-hidden bg-[#f3f6ff]">
         <div className="mx-auto grid max-w-7xl items-center gap-8 px-4 py-12 sm:px-6 md:py-16 lg:grid-cols-2 lg:gap-12 lg:px-8 lg:py-20">
           <div className="relative z-10">
