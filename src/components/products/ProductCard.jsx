@@ -1,17 +1,30 @@
 
-import { Heart, ShoppingCart, Star } from "lucide-react";
+import { ShoppingCart, Star } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { addToCart } from "../../features/cart/cartSlice";
+import toast from "react-hot-toast";
 
 export default function ProductCard({ product }) {
+  const dispatch = useDispatch();
+
+  const handleAddToCart = () => {
+    dispatch(addToCart(product));
+    toast.success(`${product.name} added to cart`);
+  };
+
   const discount =
     product.oldPrice > product.price
       ? Math.round(
-          ((product.oldPrice - product.price) / product.oldPrice) * 100
+          ((product.oldPrice - product.price) /
+            product.oldPrice) *
+            100
         )
       : 0;
 
   return (
     <article className="group overflow-hidden rounded-2xl border border-slate-100 bg-white transition duration-300 hover:-translate-y-1 hover:border-blue-100 hover:shadow-xl hover:shadow-slate-200/60">
+      {/* Product Image */}
       <div className="relative overflow-hidden bg-slate-50">
         <Link
           to={`/products/${product.id}`}
@@ -36,17 +49,9 @@ export default function ProductCard({ product }) {
             -{discount}%
           </span>
         )}
-
-        <button
-          type="button"
-          aria-label={`Add ${product.name} to wishlist`}
-          onClick={() => alert("Wishlist functionality will be added next.")}
-          className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-white text-slate-600 shadow-sm transition hover:bg-rose-50 hover:text-rose-600"
-        >
-          <Heart size={18} />
-        </button>
       </div>
 
+      {/* Product Information */}
       <div className="p-3.5 sm:p-4">
         <p className="text-xs font-medium text-slate-400">
           {product.category}
@@ -58,6 +63,7 @@ export default function ProductCard({ product }) {
           </h3>
         </Link>
 
+        {/* Rating */}
         <div className="mt-2 flex items-center gap-1.5">
           <Star
             size={15}
@@ -67,6 +73,7 @@ export default function ProductCard({ product }) {
           <span className="text-xs font-bold text-slate-700">
             {product.rating}
           </span>
+
           {product.reviews !== undefined && (
             <span className="text-xs text-slate-400">
               ({product.reviews})
@@ -74,6 +81,7 @@ export default function ProductCard({ product }) {
           )}
         </div>
 
+        {/* Price */}
         <div className="mt-3 flex flex-wrap items-center gap-2">
           <span className="text-base font-extrabold text-slate-900 sm:text-lg">
             ৳{product.price.toLocaleString("en-BD")}
@@ -86,13 +94,25 @@ export default function ProductCard({ product }) {
           )}
         </div>
 
-        <Link
-          to={`/products/${product.id}`}
-          className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-slate-900 px-3 py-2.5 text-sm font-bold text-white transition hover:bg-blue-600"
-        >
-          <ShoppingCart size={17} />
-          View product
-        </Link>
+        {/* Actions */}
+        <div className="mt-4 grid grid-cols-[1fr_auto] gap-2">
+          <button
+            type="button"
+            onClick={handleAddToCart}
+            className="flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-2 py-2.5 text-sm font-bold text-white transition hover:bg-blue-700"
+          >
+            <ShoppingCart size={17} />
+            Add to Cart
+          </button>
+
+          <Link
+            to={`/products/${product.id}`}
+            aria-label={`View ${product.name}`}
+            className="flex items-center justify-center rounded-xl border border-slate-200 px-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+          >
+            View
+          </Link>
+        </div>
       </div>
     </article>
   );
