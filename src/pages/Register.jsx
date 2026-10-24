@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   UserRound,
   Mail,
@@ -14,10 +14,13 @@ import {
 } from "lucide-react";
 
 export default function Register() {
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [error, setError] = useState("");
+  const navigate = useNavigate();
 
+const [showPassword, setShowPassword] = useState(false);
+const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+const [error, setError] = useState("");
+const [success, setSuccess] = useState("");
+const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -36,29 +39,81 @@ export default function Register() {
     }));
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    setError("");
+  const handleSubmit = async (e) => {
+  e.preventDefault();
 
-    if (formData.password.length < 8) {
-      setError("Password must contain at least 8 characters.");
-      return;
+  setError("");
+  setSuccess("");
+
+  if (formData.password.length < 8) {
+    setError("Password must contain at least 8 characters.");
+    return;
+  }
+
+  if (formData.password.length > 72) {
+    setError("Password cannot exceed 72 characters.");
+    return;
+  }
+
+  if (formData.password !== formData.confirmPassword) {
+    setError("Passwords do not match.");
+    return;
+  }
+
+  if (!formData.terms) {
+    setError("Please accept the Terms and Conditions.");
+    return;
+  }
+
+  try {
+    setLoading(true);
+
+    const response = await fetch(
+      "http://localhost:5000/api/auth/register",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: formData.name.trim(),
+          email: formData.email.trim().toLowerCase(),
+          password: formData.password,
+        }),
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || "Registration failed.");
     }
 
-    if (formData.password !== formData.confirmPassword) {
-      setError("Passwords do not match.");
-      return;
+    // Save the token for the current browser tab session.
+    sessionStorage.setItem("shopnest-token", data.token);
+    sessionStorage.setItem(
+      "shopnest-user",
+      JSON.stringify(data.user)
+    );
+
+    setSuccess("Registration successful! Redirecting to login...");
+
+    // Give the user time to see the success message.
+    setTimeout(() => {
+      navigate("/login", { replace: true });
+    }, 1200);
+  } catch (error) {
+    if (error instanceof TypeError) {
+      setError(
+        "Cannot connect to the server. Please check whether the backend is running."
+      );
+    } else {
+      setError(error.message || "Something went wrong.");
     }
-
-    if (!formData.terms) {
-      setError("Please accept the Terms and Conditions.");
-      return;
-    }
-
-    // Backend registration will be connected later.
-    setError("Registration API is not connected yet.");
-  };
-
+  } finally {
+    setLoading(false);
+  }
+};
   return (
     <div className="min-h-screen bg-[#f5f7fc] px-4 py-8 sm:px-6 lg:py-12">
       <div className="mx-auto grid min-h-[700px] max-w-6xl overflow-hidden rounded-3xl bg-white shadow-xl shadow-slate-200/60 lg:grid-cols-2">
@@ -144,6 +199,14 @@ export default function Register() {
                 {error}
               </div>
             )}
+            {success && (
+  <div
+    role="status"
+    className="mb-5 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800"
+  >
+    {success}
+  </div>
+)}
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
@@ -221,29 +284,31 @@ export default function Register() {
                 >
                   Password
                 </label>
-                <div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 transition focus-within:border-blue-500 focus-within:bg-white focus-within:ring-4 focus-within:ring-blue-100">
-                  <LockKeyhole size={19} className="shrink-0 text-slate-400" />
-                  <input
-                    id="register-password"
-                    name="password"
-                    type={showPassword ? "text" : "password"}
-                    autoComplete="new-password"
-                    placeholder="At least 8 characters"
-                    minLength={8}
-                    value={formData.password}
-                    onChange={handleChange}
-                    required
-                    className="w-full border-0 bg-transparent py-3 text-sm text-slate-800 outline-none focus:outline-none"
-                  />
-                  <button
-                    type="button"
-                    aria-label={showPassword ? "Hide password" : "Show password"}
-                    onClick={() => setShowPassword((prev) => !prev)}
-                    className="text-slate-400 hover:text-slate-700"
-                  >
-                    {showPassword ? <EyeOff size={19} /> : <Eye size={19} />}
-                  </button>
-                </div>
+               <div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4">
+  <LockKeyhole size={19} className="shrink-0 text-slate-400" />
+
+  <input
+    id="register-password"
+    name="password"
+    type={showPassword ? "text" : "password"}
+    autoComplete="new-password"
+    placeholder="At least 8 characters"
+    minLength={8}
+    value={formData.password}
+    onChange={handleChange}
+    required
+    className="w-full border-0 bg-transparent py-3 text-sm outline-none"
+  />
+
+  <button
+    type="button"
+    aria-label={showPassword ? "Hide password" : "Show password"}
+    onClick={() => setShowPassword((prev) => !prev)}
+    className="text-slate-400 hover:text-slate-700"
+  >
+    {showPassword ? <EyeOff size={19} /> : <Eye size={19} />}
+  </button>
+</div>
               </div>
 
               <div>
@@ -266,20 +331,18 @@ export default function Register() {
                     required
                     className="w-full border-0 bg-transparent py-3 text-sm text-slate-800 outline-none focus:outline-none"
                   />
-                  <button
-                    type="button"
-                    aria-label={
-                      showConfirmPassword ? "Hide password" : "Show password"
-                    }
-                    onClick={() => setShowConfirmPassword((prev) => !prev)}
-                    className="text-slate-400 hover:text-slate-700"
-                  >
-                    {showConfirmPassword ? (
-                      <EyeOff size={19} />
-                    ) : (
-                      <Eye size={19} />
-                    )}
-                  </button>
+                 <button
+  type="button"
+  aria-label={showPassword ? "Hide password" : "Show password"}
+  onClick={() => setShowPassword((prev) => !prev)}
+  className="text-slate-400 hover:text-slate-700"
+>
+  {showPassword ? (
+    <EyeOff size={19} />
+  ) : (
+    <Eye size={19} />
+  )}
+</button>
                 </div>
               </div>
 

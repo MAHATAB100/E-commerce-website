@@ -4,6 +4,7 @@ import { Link, NavLink } from "react-router-dom";
 import {
   ShoppingBag,
   Search,
+   Heart,
   Menu,
   UserRound,
 } from "lucide-react";
@@ -65,6 +66,14 @@ export default function Navbar() {
   className="btn btn-ghost btn-circle"
 >
   <Search size={20} />
+</Link>
+<Link
+  to="/wishlist"
+  aria-label="Wishlist"
+  title="Wishlist"
+  className="relative inline-flex items-center justify-center rounded-full p-2 text-slate-700 transition hover:bg-rose-50 hover:text-rose-600"
+>
+  <Heart size={21} />
 </Link>
 
           <Link

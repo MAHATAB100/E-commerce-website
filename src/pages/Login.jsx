@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
@@ -19,6 +18,7 @@ export default function Login() {
     remember: true,
   });
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -30,18 +30,71 @@ export default function Login() {
     }));
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    setError("");
+  const handleSubmit = async (e) => {
+  e.preventDefault();
+  setError("");
 
-    if (!formData.email.trim() || !formData.password) {
-      setError("Please enter your email and password.");
-      return;
+  const email = formData.email.trim().toLowerCase();
+  const password = formData.password;
+
+  if (!email || !password) {
+    setError("Please enter your email and password.");
+    return;
+  }
+
+  try {
+    setLoading(true);
+
+    const response = await fetch(
+      "http://localhost:5000/api/auth/login",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email,
+          password,
+        }),
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok || !data.success) {
+      throw new Error(data.message || "Login failed. Please try again.");
     }
 
-    // Backend authentication will be connected later.
-    setError("Login API is not connected yet.");
-  };
+    if (!data.token || !data.user) {
+      throw new Error("Invalid login response from server.");
+    }
+
+    // Remove previous saved session
+    localStorage.removeItem("shopnest-token");
+    localStorage.removeItem("shopnest-user");
+    sessionStorage.removeItem("shopnest-token");
+    sessionStorage.removeItem("shopnest-user");
+
+    // Remember me controls where login data is stored
+    const storage = formData.remember
+      ? localStorage
+      : sessionStorage;
+
+    storage.setItem("shopnest-token", data.token);
+    storage.setItem("shopnest-user", JSON.stringify(data.user));
+
+    // Redirect after successful login
+    navigate("/", { replace: true });
+  } catch (err) {
+    setError(
+      err.message === "Failed to fetch"
+        ? "Cannot connect to server. Please check your backend."
+        : err.message || "Something went wrong. Please try again."
+    );
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <div className="min-h-screen bg-[#f5f7fc] px-4 py-8 sm:px-6 lg:py-12">
@@ -222,16 +275,20 @@ export default function Login() {
                 Remember me
               </label>
 
-              <button
-                type="submit"
-                className="group flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 py-3.5 font-bold text-white shadow-lg shadow-blue-600/20 transition hover:-translate-y-0.5 hover:bg-blue-700 hover:shadow-xl"
-              >
-                Sign In
-                <ArrowRight
-                  size={19}
-                  className="transition group-hover:translate-x-1"
-                />
-              </button>
+            <button
+  type="submit"
+  disabled={loading}
+  className="group flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 py-3.5 font-bold text-white shadow-lg shadow-blue-600/20 transition hover:-translate-y-0.5 hover:bg-blue-700 hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-60"
+>
+  {loading ? "Signing In..." : "Sign In"}
+
+  {!loading && (
+    <ArrowRight
+      size={19}
+      className="transition group-hover:translate-x-1"
+    />
+  )}
+</button>
             </form>
 
             <div className="my-7 flex items-center gap-4">
