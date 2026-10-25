@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import {
   Eye,
   EyeOff,
@@ -21,6 +21,7 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
+const location = useLocation();
   const handleChange = (e) => {
     const { name, value, checked, type } = e.target;
 
@@ -84,7 +85,13 @@ export default function Login() {
     storage.setItem("shopnest-user", JSON.stringify(data.user));
          window.dispatchEvent(new Event("shopnest-auth-change"));
     // Redirect after successful login
-    navigate("/", { replace: true });
+    const from = location.state?.from;
+
+const redirectPath = from
+  ? `${from.pathname}${from.search || ""}${from.hash || ""}`
+  : "/";
+
+navigate(redirectPath, { replace: true });
   } catch (err) {
     setError(
       err.message === "Failed to fetch"
