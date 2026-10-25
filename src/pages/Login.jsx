@@ -82,7 +82,7 @@ export default function Login() {
 
     storage.setItem("shopnest-token", data.token);
     storage.setItem("shopnest-user", JSON.stringify(data.user));
-
+         window.dispatchEvent(new Event("shopnest-auth-change"));
     // Redirect after successful login
     navigate("/", { replace: true });
   } catch (err) {
