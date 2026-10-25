@@ -1,4 +1,5 @@
-
+import { useDispatch, useSelector } from "react-redux";
+import { clearCart } from "../features/cart/cartSlice";
 import { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
@@ -44,10 +45,11 @@ const formatPrice = (amount) =>
 
 export default function Checkout() {
   const navigate = useNavigate();
+const dispatch = useDispatch();
 
-  const savedUser = getSavedUser();
+const savedUser = getSavedUser();
 
-  const [cartItems] = useState(getSavedCart);
+const cartItems = useSelector((state) => state.cart.items);
 
   const [formData, setFormData] = useState({
     fullName: savedUser.name || "",
@@ -90,72 +92,162 @@ export default function Checkout() {
     setNotice("");
   };
 
-  const handleSubmit = (event) => {
-    event.preventDefault();
+  // const handleSubmit = (event) => {
+  //   event.preventDefault();
 
-    const newErrors = {};
+  //   const newErrors = {};
 
-    if (!formData.fullName.trim()) {
-      newErrors.fullName = "Please enter your full name.";
-    }
+  //   if (!formData.fullName.trim()) {
+  //     newErrors.fullName = "Please enter your full name.";
+  //   }
 
-    if (!formData.phone.trim()) {
-      newErrors.phone = "Please enter your phone number.";
-    } else if (!/^[0-9+\-\s()]{8,20}$/.test(formData.phone.trim())) {
-      newErrors.phone = "Please enter a valid phone number.";
-    }
+  //   if (!formData.phone.trim()) {
+  //     newErrors.phone = "Please enter your phone number.";
+  //   } else if (!/^[0-9+\-\s()]{8,20}$/.test(formData.phone.trim())) {
+  //     newErrors.phone = "Please enter a valid phone number.";
+  //   }
 
-    if (!formData.address.trim()) {
-      newErrors.address = "Please enter your delivery address.";
-    }
+  //   if (!formData.address.trim()) {
+  //     newErrors.address = "Please enter your delivery address.";
+  //   }
 
-    if (!formData.city.trim()) {
-      newErrors.city = "Please enter your city.";
-    }
+  //   if (!formData.city.trim()) {
+  //     newErrors.city = "Please enter your city.";
+  //   }
 
-    if (cartItems.length === 0) {
-      setNotice(
-        "Your cart is empty, or the cart storage key needs to be connected."
-      );
-      return;
-    }
+  //   if (cartItems.length === 0) {
+  //     setNotice(
+  //       "Your cart is empty, or the cart storage key needs to be connected."
+  //     );
+  //     return;
+  //   }
 
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
-      return;
-    }
+  //   if (Object.keys(newErrors).length > 0) {
+  //     setErrors(newErrors);
+  //     return;
+  //   }
 
-    // Order submission will be connected to the backend in the next phase.
-    setNotice(
-      "Your information is valid. Next, we will connect order placement to the backend."
-    );
-  };
+  //   // Order submission will be connected to the backend in the next phase.
+  //   setNotice(
+  //     "Your information is valid. Next, we will connect order placement to the backend."
+  //   );
+  // };
 
-  if (cartItems.length === 0) {
-    return (
-      <section className="min-h-[65vh] bg-slate-50 px-5 py-16">
-        <div className="mx-auto max-w-xl rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-sm">
-          <ShoppingBag className="mx-auto h-12 w-12 text-blue-600" />
+  // if (cartItems.length === 0) {
+  //   return (
+  //     <section className="min-h-[65vh] bg-slate-50 px-5 py-16">
+  //       <div className="mx-auto max-w-xl rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-sm">
+  //         <ShoppingBag className="mx-auto h-12 w-12 text-blue-600" />
 
-          <h1 className="mt-4 text-2xl font-bold text-slate-900">
-            Your cart is empty
-          </h1>
+  //         <h1 className="mt-4 text-2xl font-bold text-slate-900">
+  //           Your cart is empty
+  //         </h1>
 
-          <p className="mt-2 text-slate-500">
-            Add some products to your cart before proceeding to checkout.
-          </p>
+  //         <p className="mt-2 text-slate-500">
+  //           Add some products to your cart before proceeding to checkout.
+  //         </p>
 
-          <Link
-            to="/cart"
-            className="btn mt-6 border-none bg-blue-600 text-white hover:bg-blue-700"
-          >
-            Back to Cart
-          </Link>
-        </div>
-      </section>
-    );
+  //         <Link
+  //           to="/cart"
+  //           className="btn mt-6 border-none bg-blue-600 text-white hover:bg-blue-700"
+  //         >
+  //           Back to Cart
+  //         </Link>
+  //       </div>
+  //     </section>
+  //   );
+  // }
+  const [isSubmitting, setIsSubmitting] = useState(false);
+const handleSubmit = async (event) => {
+  event.preventDefault();
+
+  const requiredFields = [
+    "fullName",
+    "email",
+    "phone",
+    "address",
+    "city",
+    "postalCode",
+  ];
+
+  const missingField = requiredFields.find(
+    (field) => !String(formData[field] || "").trim()
+  );
+
+  if (missingField) {
+    setNotice({
+      type: "error",
+      message: "Please fill in all required fields.",
+    });
+    return;
   }
 
+  if (!cartItems.length) {
+    setNotice({
+      type: "error",
+      message: "Your cart is empty.",
+    });
+    return;
+  }
+
+  const token =
+    localStorage.getItem("shopnest-token") ||
+    sessionStorage.getItem("shopnest-token");
+
+  if (!token) {
+    setNotice({
+      type: "error",
+      message: "Please log in before placing your order.",
+    });
+    return;
+  }
+
+  setIsSubmitting(true);
+
+  try {
+    const response = await fetch("http://localhost:5000/api/orders", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        items: cartItems.map((item) => ({
+          id: String(item.id ?? item.productId ?? ""),
+          quantity: Number(item.quantity),
+        })),
+        shippingAddress: {
+          fullName: formData.fullName.trim(),
+          email: formData.email.trim(),
+          phone: formData.phone.trim(),
+          address: formData.address.trim(),
+          city: formData.city.trim(),
+          postalCode: formData.postalCode.trim(),
+        },
+        paymentMethod: "COD",
+      }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || "Failed to place order.");
+    }
+
+    dispatch(clearCart());
+
+    navigate("/order-success", {
+      state: { order: data.order || data },
+    });
+  } catch (error) {
+    setNotice({
+      type: "error",
+      message: error.message || "Something went wrong.",
+    });
+  } finally {
+    setIsSubmitting(false);
+  }
+};
   return (
     <section className="min-h-screen bg-slate-50 px-4 py-8 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-6xl">
@@ -180,7 +272,16 @@ export default function Checkout() {
             Enter your delivery information to continue.
           </p>
         </div>
-
+{notice && (
+  <div
+    className={`alert ${
+      notice.type === "error" ? "alert-error" : "alert-info"
+    }`}
+    role="alert"
+  >
+    {typeof notice === "string" ? notice : notice.message}
+  </div>
+)}
         <form onSubmit={handleSubmit}>
           <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-[1fr_380px]">
             {/* Customer Information */}
@@ -519,22 +620,29 @@ export default function Checkout() {
                 </span>
               </div>
 
-              {notice && (
-                <div
-                  role="status"
-                  className="mt-5 rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-800"
-                >
-                  {notice}
-                </div>
-              )}
+             
+{notice && (
+  <div
+    role="status"
+    className={`mt-5 rounded-xl border p-4 text-sm ${
+      typeof notice === "object" && notice.type === "error"
+        ? "border-red-200 bg-red-50 text-red-700"
+        : "border-blue-200 bg-blue-50 text-blue-800"
+    }`}
+  >
+    {typeof notice === "string" ? notice : notice.message}
+  </div>
+)}
 
-              <button
-                type="submit"
-                className="btn mt-6 min-h-14 w-full border-none bg-blue-600 text-base font-bold text-white hover:bg-blue-700"
-              >
-                <CheckCircle2 size={19} />
-                Continue to Place Order
-              </button>
+
+             <button
+  type="submit"
+  disabled={isSubmitting}
+  className="btn mt-6 min-h-14 w-full border-none bg-blue-600 text-base font-bold text-white hover:bg-blue-700"
+>
+  <CheckCircle2 size={19} />
+  {isSubmitting ? "Placing Order..." : "Place Order"}
+</button>
 
               <p className="mt-4 text-center text-xs leading-5 text-slate-500">
                 By continuing, you confirm that your delivery information is

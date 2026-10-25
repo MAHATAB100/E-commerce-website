@@ -1,30 +1,38 @@
+
 const express = require("express");
 const cors = require("cors");
 require("dotenv").config();
 
+const orderRoutes = require("./routes/orderRoutes");
 const connectDB = require("./config/db");
 const authRoutes = require("./routes/authRoutes");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// CORS must come before API routes
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || "http://localhost:5173",
+    origin: "http://localhost:5173",
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
 
+// Parse JSON request bodies
 app.use(express.json({ limit: "10kb" }));
 
+// API routes
+app.use("/api/auth", authRoutes);
+app.use("/api/orders", orderRoutes);
+
+// Health check
 app.get("/", (req, res) => {
   res.json({
     success: true,
     message: "ShopNest API is running!",
   });
 });
-
-// Authentication routes
-app.use("/api/auth", authRoutes);
 
 const startServer = async () => {
   try {
