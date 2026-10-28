@@ -15,6 +15,9 @@ import About from "./pages/About";
 import Contact from "./pages/Contact";
 import AdminLayout from "./admin/layouts/AdminLayout";
 import AdminDashboard from "./admin/pages/AdminDashboard";
+import AdminProducts from "./admin/pages/AdminProducts";
+import OrderSuccess from "./pages/OrderSuccess";
+import AdminOrders from "./admin/pages/AdminOrders";
 function NotFound() {
   return (
     <section className="px-5 py-20 text-center">
@@ -40,9 +43,13 @@ export default function App() {
         <Route path="/categories" element={<CategoryPage />} />
         <Route path="/about" element={<About />} />
         <Route path="/contact" element={<Contact />} />
-        <Route path="/admin" element={<AdminLayout />}>
+       <Route path="/order-success" element={<OrderSuccess />} />
+<Route path="/admin" element={<AdminLayout />}>
   <Route index element={<AdminDashboard />} />
+  <Route path="products" element={<AdminProducts />} />
+  <Route path="orders" element={<AdminOrders />} />
 </Route>
+
        <Route
   path="/wishlist"
   element={

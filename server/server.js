@@ -7,6 +7,10 @@ const orderRoutes = require("./routes/orderRoutes");
 const connectDB = require("./config/db");
 const authRoutes = require("./routes/authRoutes");
 const contactRoutes = require("./routes/contactRoutes");
+const adminRoutes = require("./routes/adminRoutes");
+const productRoutes = require("./routes/productRoutes");
+
+
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -27,6 +31,8 @@ app.use(express.json({ limit: "10kb" }));
 app.use("/api/auth", authRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/contact", contactRoutes);
+app.use("/api/admin", adminRoutes);
+app.use("/api/products", productRoutes);
 
 // Health check
 app.get("/", (req, res) => {

@@ -85,13 +85,17 @@ const location = useLocation();
     storage.setItem("shopnest-user", JSON.stringify(data.user));
          window.dispatchEvent(new Event("shopnest-auth-change"));
     // Redirect after successful login
-    const from = location.state?.from;
+   
+const from = location.state?.from;
 
 const redirectPath = from
   ? `${from.pathname}${from.search || ""}${from.hash || ""}`
-  : "/";
+  : data.user.role === "admin"
+    ? "/admin"
+    : "/";
 
 navigate(redirectPath, { replace: true });
+
   } catch (err) {
     setError(
       err.message === "Failed to fetch"

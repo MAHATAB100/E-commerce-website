@@ -1,4 +1,4 @@
-
+import { useEffect, useState } from "react";
 import {
   Package,
   ShoppingCart,
@@ -11,37 +11,6 @@ import {
 } from "lucide-react";
 
 import StatCard from "../components/StatCard";
-
-const stats = [
-  {
-    title: "Total Products",
-    value: "120",
-    description: "Products in your store",
-    icon: Package,
-    color: "emerald",
-  },
-  {
-    title: "Total Orders",
-    value: "248",
-    description: "Orders received",
-    icon: ShoppingCart,
-    color: "blue",
-  },
-  {
-    title: "Total Customers",
-    value: "186",
-    description: "Registered customers",
-    icon: Users,
-    color: "violet",
-  },
-  {
-    title: "Total Revenue",
-    value: "৳1,24,500",
-    description: "Demo revenue — not live data",
-    icon: DollarSign,
-    color: "amber",
-  },
-];
 
 const recentOrders = [
   {
@@ -88,6 +57,67 @@ function getStatusIcon(status) {
 }
 
 export default function AdminDashboard() {
+  const [products, setProducts] = useState([]);
+  const [loadingProducts, setLoadingProducts] = useState(true);
+  const [productError, setProductError] = useState("");
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const response = await fetch(
+          "http://localhost:5000/api/products"
+        );
+
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {
+          throw new Error(data.message || "Failed to load products");
+        }
+
+        setProducts(data.products || []);
+      } catch (error) {
+        setProductError(error.message || "Unable to load products");
+      } finally {
+        setLoadingProducts(false);
+      }
+    };
+
+    fetchProducts();
+  }, []);
+
+  const stats = [
+    {
+      title: "Total Products",
+      value: loadingProducts
+        ? "..."
+        : products.length.toLocaleString("en-BD"),
+      description: "Products in your MongoDB store",
+      icon: Package,
+      color: "emerald",
+    },
+    {
+      title: "Total Orders",
+      value: "248",
+      description: "Demo data — orders API not connected",
+      icon: ShoppingCart,
+      color: "blue",
+    },
+    {
+      title: "Total Customers",
+      value: "186",
+      description: "Demo data — customers API not connected",
+      icon: Users,
+      color: "violet",
+    },
+    {
+      title: "Total Revenue",
+      value: "৳1,24,500",
+      description: "Demo data — revenue API not connected",
+      icon: DollarSign,
+      color: "amber",
+    },
+  ];
+
   return (
     <div className="mx-auto max-w-7xl space-y-8">
       {/* Welcome */}
@@ -107,7 +137,9 @@ export default function AdminDashboard() {
         </div>
 
         <div className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600 shadow-sm">
-          <span className="font-semibold text-slate-800">Store status:</span>{" "}
+          <span className="font-semibold text-slate-800">
+            Store status:
+          </span>{" "}
           <span className="text-emerald-600">● Online</span>
         </div>
       </section>
@@ -119,7 +151,108 @@ export default function AdminDashboard() {
         ))}
       </section>
 
-      {/* Quick Actions */}
+      {/* MongoDB Products */}
+      <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <div className="border-b border-slate-100 p-5 sm:px-6">
+          <h2 className="text-lg font-bold text-slate-900">
+            Store Products
+          </h2>
+          <p className="mt-1 text-sm text-slate-500">
+            Products loaded from MongoDB
+          </p>
+        </div>
+
+        {loadingProducts ? (
+          <p className="p-6 text-sm text-slate-500">
+            Loading products...
+          </p>
+        ) : productError ? (
+          <div className="p-6">
+            <p className="text-sm text-red-600">{productError}</p>
+            <button
+              type="button"
+              onClick={() => window.location.reload()}
+              className="mt-3 rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-700"
+            >
+              Reload Dashboard
+            </button>
+          </div>
+        ) : products.length === 0 ? (
+          <p className="p-6 text-sm text-slate-500">
+            No products found.
+          </p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[650px] text-left">
+              <thead className="bg-slate-50 text-xs uppercase tracking-wider text-slate-500">
+                <tr>
+                  <th className="px-6 py-4 font-semibold">Product</th>
+                  <th className="px-6 py-4 font-semibold">Category</th>
+                  <th className="px-6 py-4 font-semibold">Price</th>
+                  <th className="px-6 py-4 font-semibold">Stock</th>
+                </tr>
+              </thead>
+
+              <tbody className="divide-y divide-slate-100">
+                {products.slice(0, 10).map((product) => (
+                  <tr
+                    key={product._id}
+                    className="transition hover:bg-slate-50"
+                  >
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        <img
+                          src={product.image}
+                          alt={product.name}
+                          className="h-12 w-12 rounded-lg border border-slate-100 object-cover"
+                        />
+                        <div>
+                          <p className="font-semibold text-slate-800">
+                            {product.name}
+                          </p>
+                          <p className="text-xs text-slate-500">
+                            ID: {product.productId}
+                          </p>
+                        </div>
+                      </div>
+                    </td>
+
+                    <td className="px-6 py-4 text-sm text-slate-600">
+                      {product.category}
+                    </td>
+
+                    <td className="whitespace-nowrap px-6 py-4 text-sm font-semibold text-slate-800">
+                      ৳{Number(product.price).toLocaleString("en-BD")}
+                    </td>
+
+                    <td className="px-6 py-4">
+                      <span
+                        className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                          product.stock <= 10
+                            ? "bg-red-50 text-red-700"
+                            : "bg-emerald-50 text-emerald-700"
+                        }`}
+                      >
+                        {product.stock}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {!loadingProducts &&
+          !productError &&
+          products.length > 10 && (
+            <p className="border-t border-slate-100 px-6 py-4 text-sm text-slate-500">
+              Showing 10 of {products.length} products.
+            </p>
+          )}
+      </section>
+
+      {/* Quick Overview */}
       <section>
         <h2 className="mb-4 text-lg font-bold text-slate-900">
           Quick Overview

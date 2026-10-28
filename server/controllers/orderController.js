@@ -5,13 +5,13 @@ const crypto = require("crypto");
 const Order = require("../models/Order");
 const Product = require("../models/Product");
 
+// ========================================
+// CREATE ORDER
+// POST /api/orders
+// ========================================
 exports.createOrder = async (req, res) => {
   try {
-    const {
-      items,
-      shippingAddress,
-      paymentMethod,
-    } = req.body;
+    const { items, shippingAddress, paymentMethod } = req.body;
 
     // Validate cart
     if (!Array.isArray(items) || items.length === 0) {
@@ -28,7 +28,7 @@ exports.createOrder = async (req, res) => {
       });
     }
 
-    // COD is the only supported payment method for now.
+    // Only Cash on Delivery is supported
     if (paymentMethod !== "COD") {
       return res.status(400).json({
         success: false,
@@ -85,7 +85,7 @@ exports.createOrder = async (req, res) => {
       });
     }
 
-    // Validate product IDs and quantities.
+    // Validate product IDs and quantities
     const quantities = new Map();
 
     for (const item of items) {
@@ -104,17 +104,19 @@ exports.createOrder = async (req, res) => {
       }
 
       const id = item.id.trim();
-      quantities.set(id, (quantities.get(id) || 0) + item.quantity);
+      const quantity = (quantities.get(id) || 0) + item.quantity;
 
-      if (quantities.get(id) > 100) {
+      if (quantity > 100) {
         return res.status(400).json({
           success: false,
           message: "Maximum quantity per product is 100",
         });
       }
+
+      quantities.set(id, quantity);
     }
 
-    // Get trusted product data from MongoDB.
+    // Load trusted product data from MongoDB
     const productIds = [...quantities.keys()];
 
     const products = await Product.find({
@@ -161,18 +163,16 @@ exports.createOrder = async (req, res) => {
       };
     });
 
-    // Fixed example shipping fee: ৳60.
+    // Fixed shipping fee
     const shippingFee = 60;
     const totalAmount = subtotal + shippingFee;
 
-    // Create the order and decrement stock atomically.
-    // A transaction requires MongoDB to run as a replica set.
+    // Atomically decrement stock and create the order
     const session = await mongoose.startSession();
     let savedOrder;
 
     try {
       await session.withTransaction(async () => {
-        // Re-check stock and decrement it within the transaction.
         for (const item of orderItems) {
           const stockResult = await Product.updateOne(
             {
@@ -197,7 +197,8 @@ exports.createOrder = async (req, res) => {
         const [order] = await Order.create(
           [
             {
-              orderNumber: `SN-${crypto.randomUUID()
+              orderNumber: `SN-${crypto
+                .randomUUID()
                 .replace(/-/g, "")
                 .slice(0, 12)
                 .toUpperCase()}`,
@@ -245,11 +246,93 @@ exports.createOrder = async (req, res) => {
       });
     }
 
-    console.error("Create order error:", error.message);
+    console.error("Create order error:", error);
 
     return res.status(500).json({
       success: false,
       message: "Unable to place order. Please try again.",
+    });
+  }
+};
+
+// ========================================
+// GET ALL ORDERS (ADMIN)
+// GET /api/admin/orders
+// ========================================
+exports.getAllOrders = async (req, res) => {
+  try {
+    const orders = await Order.find()
+      .sort({ createdAt: -1 })
+      .populate("user", "name email");
+
+    return res.status(200).json({
+      success: true,
+      count: orders.length,
+      orders,
+    });
+  } catch (error) {
+    console.error("Get all orders error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch orders",
+    });
+  }
+};
+
+// ========================================
+// UPDATE ORDER STATUS (ADMIN)
+// PATCH /api/admin/orders/:id/status
+// ========================================
+exports.updateOrderStatus = async (req, res) => {
+  try {
+    const { orderStatus } = req.body;
+
+    const allowedStatuses = [
+      "Placed",
+      "Processing",
+      "Shipped",
+      "Delivered",
+      "Cancelled",
+    ];
+
+    if (!allowedStatuses.includes(orderStatus)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid order status",
+      });
+    }
+
+    if (!mongoose.isValidObjectId(req.params.id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid order ID",
+      });
+    }
+
+    const order = await Order.findById(req.params.id);
+
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: "Order not found",
+      });
+    }
+
+    order.orderStatus = orderStatus;
+    await order.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Order status updated successfully",
+      order,
+    });
+  } catch (error) {
+    console.error("Update order status error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to update order status",
     });
   }
 };
