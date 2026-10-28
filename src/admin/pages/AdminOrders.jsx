@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 
 const API_URL = "http://localhost:5000/api/admin/orders";
+
 const statusOptions = [
   "Placed",
   "Processing",
@@ -29,8 +30,9 @@ function formatPrice(value) {
   return `৳${Number(value || 0).toLocaleString("en-BD")}`;
 }
 
-function getStatusStyle(status = "Pending") {
+function getStatusStyle(status = "Placed") {
   const styles = {
+    Placed: "bg-amber-100 text-amber-700",
     Pending: "bg-amber-100 text-amber-700",
     Processing: "bg-blue-100 text-blue-700",
     Shipped: "bg-violet-100 text-violet-700",
@@ -45,6 +47,7 @@ export default function AdminOrders() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
   const [selectedOrder, setSelectedOrder] = useState(null);
@@ -89,10 +92,18 @@ export default function AdminOrders() {
     fetchOrders();
   }, [fetchOrders]);
 
-  async function updateStatus(orderId, status) {
+ 
+  async function updateStatus(orderId, newStatus) {
+    setUpdatingId(String(orderId));
+    setError("");
+    setSuccess("");
+
     try {
-      setUpdatingId(String(orderId));
-      setError("");
+      const token = getToken();
+
+      if (!token) {
+        throw new Error("Please log in with your admin account.");
+      }
 
       const response = await fetch(
         `${API_URL}/${orderId}/status`,
@@ -100,40 +111,101 @@ export default function AdminOrders() {
           method: "PATCH",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${getToken()}`,
+            Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({ status }),
+          body: JSON.stringify({
+            orderStatus: newStatus,
+          }),
         }
       );
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || "Could not update order status.");
+        throw new Error(
+          data.message || "Could not update order status."
+        );
       }
 
-      const updatedOrder = data.order || data;
+      await fetchOrders();
 
-      setOrders((current) =>
-        current.map((order) =>
-          String(order._id || order.id) === String(orderId)
+      if (
+        selectedOrder &&
+        String(selectedOrder._id || selectedOrder.id) ===
+          String(orderId)
+      ) {
+        setSelectedOrder((current) =>
+          current
             ? {
-                ...order,
-                ...updatedOrder,
-                status: updatedOrder.status || status,
+                ...current,
+                orderStatus: newStatus,
               }
-            : order
-        )
-      );
+            : current
+        );
+      }
 
-      setSelectedOrder((current) =>
-        current &&
-        String(current._id || current.id) === String(orderId)
-          ? { ...current, ...updatedOrder, status: updatedOrder.status || status }
-          : current
-      );
+      setSuccess("Order status updated successfully.");
     } catch (err) {
       setError(err.message || "Status update failed.");
+    } finally {
+      setUpdatingId("");
+    }
+  }
+
+  async function updatePaymentStatus(orderId, newPaymentStatus) {
+    setUpdatingId(String(orderId));
+    setError("");
+    setSuccess("");
+
+    try {
+      const token = getToken();
+
+      if (!token) {
+        throw new Error("Please log in with your admin account.");
+      }
+
+      const response = await fetch(
+        `${API_URL}/${orderId}/payment-status`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            paymentStatus: newPaymentStatus,
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.message || "Could not update payment status."
+        );
+      }
+
+      await fetchOrders();
+
+      if (
+        selectedOrder &&
+        String(selectedOrder._id || selectedOrder.id) ===
+          String(orderId)
+      ) {
+        setSelectedOrder((current) =>
+          current
+            ? {
+                ...current,
+                paymentStatus: newPaymentStatus,
+              }
+            : current
+        );
+      }
+
+      setSuccess("Payment status updated successfully.");
+    } catch (err) {
+      setError(err.message || "Payment status update failed.");
     } finally {
       setUpdatingId("");
     }
@@ -153,22 +225,32 @@ export default function AdminOrders() {
       order.id ||
       "";
 
+    const email =
+      order.shippingAddress?.email ||
+      order.user?.email ||
+      "";
+
     const matchesSearch =
-      `${customer} ${reference} ${order.shippingAddress?.email || ""}`
+      `${customer} ${reference} ${email}`
         .toLowerCase()
         .includes(search.toLowerCase());
 
+    const currentStatus = order.orderStatus || "Placed";
+
     const matchesStatus =
-      statusFilter === "All" || (order.status || "Pending") === statusFilter;
+      statusFilter === "All" || currentStatus === statusFilter;
 
     return matchesSearch && matchesStatus;
   });
 
   const totalRevenue = orders
-    .filter((order) => order.status !== "Cancelled")
+    .filter((order) => order.orderStatus !== "Cancelled")
     .reduce(
       (sum, order) =>
-        sum + Number(order.totalAmount ?? order.totalPrice ?? order.total ?? 0),
+        sum +
+        Number(
+          order.totalAmount ?? order.totalPrice ?? order.total ?? 0
+        ),
       0
     );
 
@@ -193,7 +275,10 @@ export default function AdminOrders() {
             disabled={loading}
             className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-100 disabled:opacity-60"
           >
-            <RefreshCw size={17} className={loading ? "animate-spin" : ""} />
+            <RefreshCw
+              size={17}
+              className={loading ? "animate-spin" : ""}
+            />
             Refresh
           </button>
         </div>
@@ -227,7 +312,22 @@ export default function AdminOrders() {
           <div className="flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
             <AlertCircle size={20} className="mt-0.5 shrink-0" />
             <div className="flex-1">{error}</div>
-            <button onClick={() => setError("")} aria-label="Dismiss error">
+            <button
+              onClick={() => setError("")}
+              aria-label="Dismiss error"
+            >
+              <X size={18} />
+            </button>
+          </div>
+        )}
+
+        {success && (
+          <div className="flex items-center justify-between rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-700">
+            <span>{success}</span>
+            <button
+              onClick={() => setSuccess("")}
+              aria-label="Dismiss success message"
+            >
               <X size={18} />
             </button>
           </div>
@@ -293,6 +393,7 @@ export default function AdminOrders() {
                     <th className="px-5 py-4">Actions</th>
                   </tr>
                 </thead>
+
                 <tbody className="divide-y divide-slate-100">
                   {filteredOrders.map((order) => {
                     const id = order._id || order.id;
@@ -301,15 +402,21 @@ export default function AdminOrders() {
                       order.user?.name ||
                       order.customerName ||
                       "Customer";
+
                     const total =
-                      order.totalAmount ?? order.totalPrice ?? order.total ?? 0;
-                    const status = order.status || "Pending";
+                      order.totalAmount ??
+                      order.totalPrice ??
+                      order.total ??
+                      0;
+
+                    const status = order.orderStatus || "Placed";
 
                     return (
                       <tr key={id} className="hover:bg-slate-50/70">
                         <td className="px-5 py-4 font-semibold text-slate-800">
                           #{String(id || "").slice(-8).toUpperCase()}
                         </td>
+
                         <td className="px-5 py-4">
                           <p className="font-medium text-slate-800">
                             {customer}
@@ -320,6 +427,7 @@ export default function AdminOrders() {
                               ""}
                           </p>
                         </td>
+
                         <td className="px-5 py-4 text-slate-600">
                           {order.createdAt
                             ? new Date(order.createdAt).toLocaleDateString(
@@ -327,9 +435,11 @@ export default function AdminOrders() {
                               )
                             : "—"}
                         </td>
+
                         <td className="px-5 py-4 font-semibold text-slate-800">
                           {formatPrice(total)}
                         </td>
+
                         <td className="px-5 py-4">
                           <select
                             value={status}
@@ -350,10 +460,42 @@ export default function AdminOrders() {
                               </option>
                             ))}
                           </select>
+
+                          {updatingId === String(id) && (
+                            <span className="ml-2 text-xs text-slate-500">
+                              Saving...
+                            </span>
+                          )}
                         </td>
-                        <td className="px-5 py-4 text-slate-600">
-                          {order.paymentMethod || "COD"}
-                        </td>
+
+                       <td className="px-5 py-4">
+  <p className="mb-2 text-xs font-medium text-slate-500">
+    {order.paymentMethod || "COD"}
+  </p>
+
+  <select
+    value={order.paymentStatus || "Pending"}
+    disabled={updatingId === String(id)}
+    onChange={(event) =>
+      updatePaymentStatus(id, event.target.value)
+    }
+    className={`rounded-full px-3 py-1.5 text-xs font-semibold outline-none ${
+      order.paymentStatus === "Paid"
+        ? "bg-emerald-100 text-emerald-700"
+        : order.paymentStatus === "Failed"
+        ? "bg-red-100 text-red-700"
+        : order.paymentStatus === "Refunded"
+        ? "bg-violet-100 text-violet-700"
+        : "bg-amber-100 text-amber-700"
+    }`}
+  >
+    <option value="Pending">Pending</option>
+    <option value="Paid">Paid</option>
+    <option value="Failed">Failed</option>
+    <option value="Refunded">Refunded</option>
+  </select>
+</td>
+
                         <td className="px-5 py-4">
                           <button
                             onClick={() => setSelectedOrder(order)}
@@ -385,6 +527,7 @@ export default function AdminOrders() {
                   ID: {selectedOrder._id || selectedOrder.id}
                 </p>
               </div>
+
               <button
                 onClick={() => setSelectedOrder(null)}
                 className="rounded-lg p-2 text-slate-500 hover:bg-slate-100"
@@ -405,6 +548,7 @@ export default function AdminOrders() {
                       "Customer"}
                   </p>
                 </div>
+
                 <div>
                   <p className="text-xs text-slate-500">Email</p>
                   <p className="mt-1 break-all font-medium text-slate-800">
@@ -413,16 +557,21 @@ export default function AdminOrders() {
                       "—"}
                   </p>
                 </div>
+
                 <div>
                   <p className="text-xs text-slate-500">Phone</p>
                   <p className="mt-1 font-medium text-slate-800">
                     {selectedOrder.shippingAddress?.phone || "—"}
                   </p>
                 </div>
+
                 <div>
                   <p className="text-xs text-slate-500">Payment Method</p>
                   <p className="mt-1 font-medium text-slate-800">
                     {selectedOrder.paymentMethod || "COD"}
+                  </p>
+                  <p className="mt-1 text-xs text-amber-600">
+                    Payment: {selectedOrder.paymentStatus || "Pending"}
                   </p>
                 </div>
               </div>
@@ -444,6 +593,7 @@ export default function AdminOrders() {
                 <h3 className="mb-3 font-semibold text-slate-800">
                   Ordered Items
                 </h3>
+
                 <div className="space-y-2">
                   {(selectedOrder.items || []).map((item, index) => (
                     <div
@@ -452,12 +602,16 @@ export default function AdminOrders() {
                     >
                       <div>
                         <p className="font-medium text-slate-800">
-                          {item.name || item.title || item.product?.name || "Product"}
+                          {item.name ||
+                            item.title ||
+                            item.product?.name ||
+                            "Product"}
                         </p>
                         <p className="mt-1 text-xs text-slate-500">
                           Quantity: {item.quantity || 1}
                         </p>
                       </div>
+
                       <p className="font-semibold text-slate-800">
                         {formatPrice(
                           (item.price || item.product?.price || 0) *
@@ -481,6 +635,29 @@ export default function AdminOrders() {
                       0
                   )}
                 </span>
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-medium text-slate-700">
+                  Update Order Status
+                </label>
+                <select
+                  value={selectedOrder.orderStatus || "Placed"}
+                  disabled={updatingId === String(selectedOrder._id || selectedOrder.id)}
+                  onChange={(event) =>
+                    updateStatus(
+                      selectedOrder._id || selectedOrder.id,
+                      event.target.value
+                    )
+                  }
+                  className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-emerald-500"
+                >
+                  {statusOptions.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
           </div>

@@ -4,6 +4,7 @@ const router = express.Router();
 const {
   getAllOrders,
   updateOrderStatus,
+  updatePaymentStatus,
 } = require("../controllers/orderController");
 
 const { protect } = require("../middleware/authMiddleware");
@@ -38,6 +39,12 @@ router.patch(
   protect,
   adminMiddleware,
   updateOrderStatus
+);
+router.patch(
+  "/orders/:id/payment-status",
+  protect,
+  adminMiddleware,
+  updatePaymentStatus
 );
 
 module.exports = router;

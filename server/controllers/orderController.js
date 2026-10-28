@@ -336,3 +336,51 @@ exports.updateOrderStatus = async (req, res) => {
     });
   }
 };
+
+// Update payment status (Admin only)
+exports.updatePaymentStatus = async (req, res) => {
+  try {
+    const { paymentStatus } = req.body;
+
+    const allowedStatuses = ["Pending", "Paid", "Failed", "Refunded"];
+
+    if (!allowedStatuses.includes(paymentStatus)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid payment status",
+      });
+    }
+
+    if (!mongoose.isValidObjectId(req.params.id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid order ID",
+      });
+    }
+
+    const order = await Order.findById(req.params.id);
+
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: "Order not found",
+      });
+    }
+
+    order.paymentStatus = paymentStatus;
+    await order.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Payment status updated successfully",
+      order,
+    });
+  } catch (error) {
+    console.error("Update payment status error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to update payment status",
+    });
+  }
+};
