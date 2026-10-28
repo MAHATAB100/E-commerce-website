@@ -13,6 +13,8 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import CategoryPage from "./pages/CategoryPage";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
+import AdminLayout from "./admin/layouts/AdminLayout";
+import AdminDashboard from "./admin/pages/AdminDashboard";
 function NotFound() {
   return (
     <section className="px-5 py-20 text-center">
@@ -38,6 +40,9 @@ export default function App() {
         <Route path="/categories" element={<CategoryPage />} />
         <Route path="/about" element={<About />} />
         <Route path="/contact" element={<Contact />} />
+        <Route path="/admin" element={<AdminLayout />}>
+  <Route index element={<AdminDashboard />} />
+</Route>
        <Route
   path="/wishlist"
   element={
