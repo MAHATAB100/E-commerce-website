@@ -30,15 +30,18 @@ const contactInfo = [
   },
 ];
 
-export default function Contact() {
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    subject: "",
-    message: "",
-  });
+const initialFormData = {
+  name: "",
+  email: "",
+  subject: "",
+  message: "",
+};
 
+export default function Contact() {
+  const [formData, setFormData] = useState(initialFormData);
+  const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState("");
+  const [statusType, setStatusType] = useState("");
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -47,28 +50,97 @@ export default function Contact() {
       ...previous,
       [name]: value,
     }));
+
+    // Clear the previous message when the user edits the form.
+    if (status) {
+      setStatus("");
+      setStatusType("");
+    }
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
 
-    // Frontend-only submission for now.
-    // A backend API will be connected later.
-    setStatus(
-      "Your message has been validated. Message submission will be connected to the backend next."
-    );
+    if (loading) return;
 
-    setFormData({
-      name: "",
-      email: "",
-      subject: "",
-      message: "",
-    });
+    const payload = {
+      name: formData.name.trim(),
+      email: formData.email.trim(),
+      subject: formData.subject.trim(),
+      message: formData.message.trim(),
+    };
+
+    if (
+      !payload.name ||
+      !payload.email ||
+      !payload.subject ||
+      !payload.message
+    ) {
+      setStatus("Please fill in all fields.");
+      setStatusType("error");
+      return;
+    }
+
+    if (payload.message.length < 10) {
+      setStatus("Your message must contain at least 10 characters.");
+      setStatusType("error");
+      return;
+    }
+
+    setLoading(true);
+    setStatus("");
+    setStatusType("");
+
+    try {
+      const apiBaseUrl = (
+        import.meta.env.VITE_API_URL || "http://localhost:5000"
+      ).replace(/\/+$/, "");
+
+      const response = await fetch(`${apiBaseUrl}/api/contact`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const result = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        throw new Error(
+          result?.message ||
+            `Unable to submit your message (HTTP ${response.status}).`
+        );
+      }
+
+      if (!result?.success) {
+        throw new Error(
+          result?.message || "The server could not submit your message."
+        );
+      }
+
+      setStatus(
+        result.message || "Your message has been sent successfully!"
+      );
+      setStatusType("success");
+      setFormData({ ...initialFormData });
+    } catch (error) {
+      console.error("Contact form submission error:", error);
+
+      setStatus(
+        error.message === "Failed to fetch"
+          ? "Cannot connect to the server. Please check that your backend is running."
+          : error.message || "Something went wrong. Please try again."
+      );
+      setStatusType("error");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <main className="min-h-screen bg-slate-50">
-      {/* Hero */}
+      {/* Hero Section */}
       <section className="bg-slate-950 px-4 py-16 text-center text-white sm:py-20">
         <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-500">
           <MessageCircle size={28} />
@@ -124,9 +196,25 @@ export default function Contact() {
                       {item.title}
                     </h3>
 
-                    <p className="mt-1 break-words font-medium text-emerald-700">
-                      {item.value}
-                    </p>
+                    {item.title === "Email Us" ? (
+                      <a
+                        href={`mailto:${item.value}`}
+                        className="mt-1 block break-words font-medium text-emerald-700 hover:text-emerald-800"
+                      >
+                        {item.value}
+                      </a>
+                    ) : item.title === "Call Us" ? (
+                      <a
+                        href={`tel:${item.value.replace(/\s/g, "")}`}
+                        className="mt-1 block break-words font-medium text-emerald-700 hover:text-emerald-800"
+                      >
+                        {item.value}
+                      </a>
+                    ) : (
+                      <p className="mt-1 font-medium text-emerald-700">
+                        {item.value}
+                      </p>
+                    )}
 
                     <p className="mt-1 text-sm text-slate-500">
                       {item.description}
@@ -138,7 +226,10 @@ export default function Contact() {
           </div>
 
           <div className="mt-6 flex items-start gap-3 rounded-2xl bg-emerald-50 p-5 text-slate-700">
-            <MapPin className="mt-1 shrink-0 text-emerald-600" size={22} />
+            <MapPin
+              className="mt-1 shrink-0 text-emerald-600"
+              size={22}
+            />
 
             <div>
               <h3 className="font-bold text-slate-900">
@@ -163,96 +254,111 @@ export default function Contact() {
               Fill in the form below. All fields are required.
             </p>
 
-            <form onSubmit={handleSubmit} className="mt-8 space-y-5">
+            <form
+              onSubmit={handleSubmit}
+              className="mt-8 space-y-5"
+            >
               <div className="grid gap-5 sm:grid-cols-2">
                 <div>
                   <label
-                    htmlFor="name"
+                    htmlFor="contact-name"
                     className="mb-2 block text-sm font-bold text-slate-700"
                   >
                     Full Name
                   </label>
 
                   <input
-                    id="name"
+                    id="contact-name"
                     name="name"
                     type="text"
                     value={formData.name}
                     onChange={handleChange}
                     placeholder="Enter your name"
                     autoComplete="name"
+                    maxLength={100}
                     required
-                    className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition placeholder:text-slate-400 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
+                    disabled={loading}
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition placeholder:text-slate-400 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 disabled:opacity-60"
                   />
                 </div>
 
                 <div>
                   <label
-                    htmlFor="email"
+                    htmlFor="contact-email"
                     className="mb-2 block text-sm font-bold text-slate-700"
                   >
                     Email Address
                   </label>
 
                   <input
-                    id="email"
+                    id="contact-email"
                     name="email"
                     type="email"
                     value={formData.email}
                     onChange={handleChange}
                     placeholder="you@example.com"
                     autoComplete="email"
+                    maxLength={254}
                     required
-                    className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition placeholder:text-slate-400 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
+                    disabled={loading}
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition placeholder:text-slate-400 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 disabled:opacity-60"
                   />
                 </div>
               </div>
 
               <div>
                 <label
-                  htmlFor="subject"
+                  htmlFor="contact-subject"
                   className="mb-2 block text-sm font-bold text-slate-700"
                 >
                   Subject
                 </label>
 
                 <input
-                  id="subject"
+                  id="contact-subject"
                   name="subject"
                   type="text"
                   value={formData.subject}
                   onChange={handleChange}
                   placeholder="What do you need help with?"
+                  maxLength={200}
                   required
-                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition placeholder:text-slate-400 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
+                  disabled={loading}
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition placeholder:text-slate-400 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 disabled:opacity-60"
                 />
               </div>
 
               <div>
                 <label
-                  htmlFor="message"
+                  htmlFor="contact-message"
                   className="mb-2 block text-sm font-bold text-slate-700"
                 >
                   Your Message
                 </label>
 
                 <textarea
-                  id="message"
+                  id="contact-message"
                   name="message"
                   value={formData.message}
                   onChange={handleChange}
                   placeholder="Write your message here..."
                   rows={5}
                   minLength={10}
+                  maxLength={5000}
                   required
-                  className="w-full resize-y rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition placeholder:text-slate-400 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
+                  disabled={loading}
+                  className="w-full resize-y rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition placeholder:text-slate-400 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 disabled:opacity-60"
                 />
               </div>
 
               {status && (
                 <div
-                  role="status"
-                  className="rounded-xl bg-emerald-50 p-4 text-sm leading-6 text-emerald-800"
+                  role={statusType === "error" ? "alert" : "status"}
+                  className={`rounded-xl p-4 text-sm leading-6 ${
+                    statusType === "success"
+                      ? "bg-emerald-50 text-emerald-800"
+                      : "bg-red-50 text-red-700"
+                  }`}
                 >
                   {status}
                 </div>
@@ -260,10 +366,11 @@ export default function Contact() {
 
               <button
                 type="submit"
-                className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-500 px-6 py-3.5 font-bold text-white transition hover:bg-emerald-600 focus:outline-none focus:ring-4 focus:ring-emerald-200 sm:w-auto"
+                disabled={loading}
+                className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-500 px-6 py-3.5 font-bold text-white transition hover:bg-emerald-600 focus:outline-none focus:ring-4 focus:ring-emerald-200 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
               >
-                Send Message
-                <Send size={18} />
+                {loading ? "Sending..." : "Send Message"}
+                {!loading && <Send size={18} />}
               </button>
             </form>
           </div>

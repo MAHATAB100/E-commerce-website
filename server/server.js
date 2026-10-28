@@ -6,6 +6,7 @@ require("dotenv").config();
 const orderRoutes = require("./routes/orderRoutes");
 const connectDB = require("./config/db");
 const authRoutes = require("./routes/authRoutes");
+const contactRoutes = require("./routes/contactRoutes");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -25,6 +26,7 @@ app.use(express.json({ limit: "10kb" }));
 // API routes
 app.use("/api/auth", authRoutes);
 app.use("/api/orders", orderRoutes);
+app.use("/api/contact", contactRoutes);
 
 // Health check
 app.get("/", (req, res) => {
