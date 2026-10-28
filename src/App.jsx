@@ -10,6 +10,8 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Wishlist from "./pages/Wishlist";
 import ProtectedRoute from "./components/ProtectedRoute";
+import CategoryPage from "./pages/CategoryPage";
+import About from "./pages/About";
 function NotFound() {
   return (
     <section className="px-5 py-20 text-center">
@@ -32,6 +34,8 @@ export default function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="*" element={<NotFound />} />
+        <Route path="/categories" element={<CategoryPage />} />
+        <Route path="/about" element={<About />} />
        <Route
   path="/wishlist"
   element={

@@ -77,7 +77,7 @@ exports.createOrder = async (req, res) => {
       cleanAddress.address.length > 300 ||
       cleanAddress.city.length > 100 ||
       cleanAddress.postalCode.length > 20 ||
-      !/^\S+@\S+\.\S+$/.test(cleanAddress.email)
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanAddress.email)
     ) {
       return res.status(400).json({
         success: false,

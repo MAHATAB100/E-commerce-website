@@ -1,5 +1,14 @@
 
-import { ArrowRight, Check, Clock3, ShoppingBag } from "lucide-react";
+import {
+  ArrowRight,
+  Check,
+  Truck,
+  ShieldCheck,
+  Headphones,
+  RotateCcw,
+  ShoppingBag,
+  Sparkles,
+} from "lucide-react";
 import { Link } from "react-router-dom";
 
 import PromoBanner from "../components/home/PromoBanner";
@@ -8,127 +17,204 @@ import FeaturedProducts from "../components/home/FeaturedProducts";
 import DealBanner from "../components/home/DealBanner";
 import BenefitsSection from "../components/home/BenefitsSection";
 
+const shoppingBenefits = [
+  {
+    icon: Truck,
+    title: "Free Shipping",
+    description: "On eligible orders",
+  },
+  {
+    icon: ShieldCheck,
+    title: "Secure Shopping",
+    description: "Shop with confidence",
+  },
+  {
+    icon: Headphones,
+    title: "Customer Support",
+    description: "We're here to help",
+  },
+  {
+    icon: RotateCcw,
+    title: "Easy Returns",
+    description: "Hassle-free shopping",
+  },
+];
+
 export default function Home() {
   return (
     <>
       <PromoBanner />
 
-     
-      <section className="overflow-hidden bg-[#f3f6ff]">
-        <div className="mx-auto grid max-w-7xl items-center gap-8 px-4 py-12 sm:px-6 md:py-16 lg:grid-cols-2 lg:gap-12 lg:px-8 lg:py-20">
+      {/* Hero Section */}
+      <section className="relative isolate overflow-hidden bg-slate-950 text-white">
+        {/* Background decoration */}
+        <div className="pointer-events-none absolute inset-0 -z-10">
+          <div className="absolute -right-24 -top-24 h-96 w-96 rounded-full bg-emerald-500/10 blur-3xl" />
+          <div className="absolute -bottom-32 left-1/4 h-80 w-80 rounded-full bg-emerald-400/10 blur-3xl" />
+
+          <div
+            className="absolute inset-0 opacity-[0.035]"
+            style={{
+              backgroundImage:
+                "linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)",
+              backgroundSize: "48px 48px",
+            }}
+          />
+        </div>
+
+        <div className="mx-auto grid max-w-7xl items-center gap-10 px-4 py-14 sm:px-6 sm:py-16 lg:grid-cols-2 lg:gap-16 lg:px-8 lg:py-20">
+          {/* Hero content */}
           <div className="relative z-10">
-            <span className="inline-flex items-center gap-2 rounded-full border border-blue-100 bg-white px-4 py-2 text-sm font-semibold text-blue-700 shadow-sm">
-              <ShoppingBag size={16} />
-              Discover the ShopNest collection
+            <span className="inline-flex items-center gap-2 rounded-full border border-emerald-400/20 bg-emerald-400/10 px-4 py-2 text-xs font-bold uppercase tracking-[0.16em] text-emerald-400 sm:text-sm">
+              <Sparkles size={16} />
+              Discover something special
             </span>
 
-            <h1 className="mt-6 max-w-xl text-4xl font-black leading-[1.12] tracking-tight text-slate-950 sm:text-5xl lg:text-6xl">
-              Find your next
-              <span className="block text-blue-600">favorite thing.</span>
+            <h1 className="mt-6 max-w-2xl text-4xl font-black leading-[1.1] tracking-tight sm:text-5xl lg:text-6xl xl:text-7xl">
+              Upgrade Your
+              <br />
+              Style with
+              <span className="block text-emerald-400">ShopNest.</span>
             </h1>
 
-            <p className="mt-6 max-w-lg text-base leading-7 text-slate-600 sm:text-lg sm:leading-8">
-              Discover everyday essentials, modern accessories and
-              products you'll love—all in one convenient place.
+            <p className="mt-6 max-w-lg text-base leading-7 text-slate-300 sm:text-lg sm:leading-8">
+              Discover everyday essentials, stylish accessories and products
+              you'll love. Shop your favorites with a simple and convenient
+              shopping experience.
             </p>
 
             <div className="mt-8 flex flex-wrap gap-3">
               <Link
                 to="/shop"
-                className="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-6 py-3.5 font-bold text-white shadow-lg shadow-blue-600/20 transition hover:-translate-y-0.5 hover:bg-blue-700"
+                className="group inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-500 px-6 py-3.5 font-bold text-white shadow-lg shadow-emerald-500/20 transition duration-200 hover:-translate-y-0.5 hover:bg-emerald-400"
               >
-                Explore products <ArrowRight size={19} />
+                Shop Now
+                <ArrowRight
+                  size={19}
+                  className="transition-transform group-hover:translate-x-1"
+                />
               </Link>
 
               <Link
-                to="/register"
-                className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-6 py-3.5 font-bold text-slate-800 transition hover:border-blue-200 hover:bg-blue-50"
+                to="/shop"
+                className="inline-flex items-center justify-center rounded-xl border border-white/20 bg-white/5 px-6 py-3.5 font-bold text-white transition hover:border-white/40 hover:bg-white/10"
               >
-                Join ShopNest
+                Explore Collection
               </Link>
             </div>
 
-            <div className="mt-8 flex flex-wrap gap-x-5 gap-y-3 text-sm text-slate-600">
+            <div className="mt-8 flex flex-wrap gap-x-6 gap-y-3 text-sm text-slate-300">
               <span className="flex items-center gap-2">
-                <Check size={17} className="text-emerald-600" />
-                Easy browsing
+                <Check size={17} className="text-emerald-400" />
+                Easy shopping
               </span>
+
               <span className="flex items-center gap-2">
-                <Check size={17} className="text-emerald-600" />
-                Convenient checkout
+                <Check size={17} className="text-emerald-400" />
+                Secure checkout
+              </span>
+
+              <span className="flex items-center gap-2">
+                <Check size={17} className="text-emerald-400" />
+                Quality products
               </span>
             </div>
           </div>
 
-          <div className="relative mx-auto w-full max-w-xl">
-            <div className="absolute -right-5 -top-5 h-28 w-28 rounded-full bg-blue-200/60 blur-2xl" />
-            <div className="absolute -bottom-5 -left-5 h-32 w-32 rounded-full bg-indigo-200/70 blur-2xl" />
+          {/* Hero image */}
+          <div className="relative mx-auto w-full max-w-xl lg:max-w-none">
+            <div className="absolute -right-4 -top-4 h-32 w-32 rounded-full bg-emerald-400/20 blur-3xl" />
+            <div className="absolute -bottom-5 -left-5 h-36 w-36 rounded-full bg-teal-400/10 blur-3xl" />
 
-            <div className="relative overflow-hidden rounded-[2rem] bg-white p-3 shadow-2xl shadow-blue-900/10">
+            <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-white/5 p-2 shadow-2xl shadow-black/30">
               <img
-                src="https://images.unsplash.com/photo-1607082349566-187342175e2f?w=1100"
-                alt="A selection of shopping products and gifts"
+                src="https://images.unsplash.com/photo-1607082349566-187342175e2f?w=1200&auto=format&fit=crop&q=85"
+                alt="A collection of shopping products and gifts"
                 fetchPriority="high"
-                className="h-[320px] w-full rounded-[1.5rem] object-cover sm:h-[420px]"
+                className="h-[300px] w-full rounded-[1.35rem] object-cover sm:h-[390px] lg:h-[440px]"
               />
 
-              <div className="absolute bottom-7 left-7 right-7 flex items-center justify-between gap-3 rounded-2xl border border-white/70 bg-white/95 p-4 shadow-xl backdrop-blur">
+              <div className="absolute inset-x-5 bottom-5 flex items-center justify-between gap-3 rounded-2xl border border-white/60 bg-white/95 p-4 text-slate-900 shadow-xl backdrop-blur-md sm:inset-x-7 sm:bottom-7 sm:p-5">
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-wider text-blue-600">
-                    Your next discovery
+                  <p className="text-xs font-bold uppercase tracking-wider text-emerald-600">
+                    Welcome to ShopNest
                   </p>
-                  <p className="mt-1 font-bold text-slate-900">
-                    Something special awaits
+
+                  <p className="mt-1 text-base font-extrabold sm:text-lg">
+                    Your next favorite is here.
+                  </p>
+
+                  <p className="mt-1 text-xs text-slate-500 sm:text-sm">
+                    Explore our latest collection.
                   </p>
                 </div>
-                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-blue-600 text-white">
-                  <ShoppingBag size={21} />
-                </span>
+
+                <Link
+                  to="/shop"
+                  aria-label="Explore ShopNest products"
+                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-500 text-white transition hover:bg-emerald-600 sm:h-12 sm:w-12"
+                >
+                  <ShoppingBag size={22} />
+                </Link>
+              </div>
+            </div>
+
+            {/* Floating label */}
+            <div className="absolute -left-2 top-6 hidden items-center gap-3 rounded-2xl border border-white/10 bg-slate-900/95 px-4 py-3 shadow-xl sm:flex lg:-left-6">
+              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-400">
+                <ShoppingBag size={20} />
+              </span>
+
+              <div>
+                <p className="text-sm font-bold text-white">
+                  Shop your favorites
+                </p>
+                <p className="text-xs text-slate-400">
+                  All in one place
+                </p>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Quick shopping highlights */}
+      {/* Shopping Benefits */}
       <section className="border-b border-slate-100 bg-white">
-        <div className="mx-auto grid max-w-7xl grid-cols-1 gap-5 px-4 py-6 sm:grid-cols-3 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-center gap-3 sm:justify-start">
-            <span className="flex h-11 w-11 items-center justify-center rounded-full bg-blue-50 text-blue-700">
-              <ShoppingBag size={21} />
-            </span>
-            <div>
-              <p className="font-bold text-slate-900">Explore with ease</p>
-              <p className="text-sm text-slate-500">Browse our collection</p>
-            </div>
-          </div>
+        <div className="mx-auto grid max-w-7xl grid-cols-1 divide-y divide-slate-100 px-4 py-5 sm:grid-cols-2 sm:divide-y-0 sm:px-6 lg:grid-cols-4 lg:px-8">
+          {shoppingBenefits.map((benefit) => {
+            const Icon = benefit.icon;
 
-          <div className="flex items-center justify-center gap-3 sm:justify-start">
-            <span className="flex h-11 w-11 items-center justify-center rounded-full bg-emerald-50 text-emerald-700">
-              <Check size={21} />
-            </span>
-            <div>
-              <p className="font-bold text-slate-900">Simple checkout</p>
-              <p className="text-sm text-slate-500">A clear ordering process</p>
-            </div>
-          </div>
+            return (
+              <div
+                key={benefit.title}
+                className="flex items-center gap-4 px-3 py-4 sm:px-5 lg:justify-center lg:border-r lg:border-slate-100 lg:last:border-r-0"
+              >
+                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600">
+                  <Icon size={23} strokeWidth={1.8} />
+                </span>
 
-          <div className="flex items-center justify-center gap-3 sm:justify-start">
-            <span className="flex h-11 w-11 items-center justify-center rounded-full bg-amber-50 text-amber-700">
-              <Clock3 size={21} />
-            </span>
-            <div>
-              <p className="font-bold text-slate-900">Shop on your time</p>
-              <p className="text-sm text-slate-500">Browse whenever you like</p>
-            </div>
-          </div>
+                <div>
+                  <h3 className="font-bold text-slate-900">
+                    {benefit.title}
+                  </h3>
+
+                  <p className="mt-1 text-sm text-slate-500">
+                    {benefit.description}
+                  </p>
+                </div>
+              </div>
+            );
+          })}
         </div>
       </section>
 
-      <CategorySection />
-      <FeaturedProducts />
-      <DealBanner />
-      <BenefitsSection />
+      {/* Existing sections */}
+      <div className="bg-white">
+        <CategorySection />
+        <FeaturedProducts />
+        <DealBanner />
+        <BenefitsSection />
+      </div>
     </>
   );
 }

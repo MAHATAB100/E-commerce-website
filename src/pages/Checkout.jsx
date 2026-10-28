@@ -92,71 +92,7 @@ const cartItems = useSelector((state) => state.cart.items);
     setNotice("");
   };
 
-  // const handleSubmit = (event) => {
-  //   event.preventDefault();
-
-  //   const newErrors = {};
-
-  //   if (!formData.fullName.trim()) {
-  //     newErrors.fullName = "Please enter your full name.";
-  //   }
-
-  //   if (!formData.phone.trim()) {
-  //     newErrors.phone = "Please enter your phone number.";
-  //   } else if (!/^[0-9+\-\s()]{8,20}$/.test(formData.phone.trim())) {
-  //     newErrors.phone = "Please enter a valid phone number.";
-  //   }
-
-  //   if (!formData.address.trim()) {
-  //     newErrors.address = "Please enter your delivery address.";
-  //   }
-
-  //   if (!formData.city.trim()) {
-  //     newErrors.city = "Please enter your city.";
-  //   }
-
-  //   if (cartItems.length === 0) {
-  //     setNotice(
-  //       "Your cart is empty, or the cart storage key needs to be connected."
-  //     );
-  //     return;
-  //   }
-
-  //   if (Object.keys(newErrors).length > 0) {
-  //     setErrors(newErrors);
-  //     return;
-  //   }
-
-  //   // Order submission will be connected to the backend in the next phase.
-  //   setNotice(
-  //     "Your information is valid. Next, we will connect order placement to the backend."
-  //   );
-  // };
-
-  // if (cartItems.length === 0) {
-  //   return (
-  //     <section className="min-h-[65vh] bg-slate-50 px-5 py-16">
-  //       <div className="mx-auto max-w-xl rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-sm">
-  //         <ShoppingBag className="mx-auto h-12 w-12 text-blue-600" />
-
-  //         <h1 className="mt-4 text-2xl font-bold text-slate-900">
-  //           Your cart is empty
-  //         </h1>
-
-  //         <p className="mt-2 text-slate-500">
-  //           Add some products to your cart before proceeding to checkout.
-  //         </p>
-
-  //         <Link
-  //           to="/cart"
-  //           className="btn mt-6 border-none bg-blue-600 text-white hover:bg-blue-700"
-  //         >
-  //           Back to Cart
-  //         </Link>
-  //       </div>
-  //     </section>
-  //   );
-  // }
+ 
   const [isSubmitting, setIsSubmitting] = useState(false);
 const handleSubmit = async (event) => {
   event.preventDefault();
