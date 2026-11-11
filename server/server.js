@@ -18,7 +18,7 @@ const PORT = process.env.PORT || 5000;
 // CORS must come before API routes
 app.use(
   cors({
-    origin: "https://e-commerce-website-rouge-eta.vercel.app/",
+    origin: "https://e-commerce-website-c9eh16f0t-neural21.vercel.app/",
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
   })
