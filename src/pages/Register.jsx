@@ -1,4 +1,4 @@
-
+import API from "../utils/api";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
@@ -68,8 +68,8 @@ const [loading, setLoading] = useState(false);
   try {
     setLoading(true);
 
-    const response = await fetch(
-      "http://localhost:5000/api/auth/register",
+  const response = await fetch(
+  `${API}/api/auth/register`,
       {
         method: "POST",
         headers: {

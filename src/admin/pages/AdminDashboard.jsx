@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+
 import {
   Package,
   ShoppingCart,
@@ -64,10 +65,7 @@ export default function AdminDashboard() {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const response = await fetch(
-          "http://localhost:5000/api/products"
-        );
-
+      const response = await fetch(`${API}/api/products`);
         const data = await response.json();
 
         if (!response.ok || !data.success) {

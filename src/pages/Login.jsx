@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
+import API from "../utils/api";
 import {
   Eye,
   EyeOff,
@@ -46,8 +47,8 @@ const location = useLocation();
   try {
     setLoading(true);
 
-    const response = await fetch(
-      "http://localhost:5000/api/auth/login",
+  const response = await fetch(
+  `${API}/api/auth/login`,
       {
         method: "POST",
         headers: {

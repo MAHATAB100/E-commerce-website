@@ -1,4 +1,4 @@
-
+import API from "../../utils/api";
 import { useCallback, useEffect, useState } from "react";
 import {
   Search,
@@ -9,7 +9,7 @@ import {
   AlertCircle,
 } from "lucide-react";
 
-const API_URL = "http://localhost:5000/api/admin/orders";
+const API_URL = `${API}/api/admin/orders`;
 
 const statusOptions = [
   "Placed",

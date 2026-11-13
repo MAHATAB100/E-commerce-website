@@ -1,3 +1,4 @@
+import API from "../../utils/api";
 import { useEffect, useState } from "react";
 import {
   Plus,
@@ -9,8 +10,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 
-const API_URL = "http://localhost:5000/api/products";
-
+const response = await fetch(`${API}/api/products`);
 const initialForm = {
   productId: "",
   name: "",

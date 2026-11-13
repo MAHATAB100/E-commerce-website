@@ -1,58 +1,51 @@
 
+
 const express = require("express");
 const cors = require("cors");
-require("dotenv").config();
+const dotenv = require("dotenv");
 
-const orderRoutes = require("./routes/orderRoutes");
 const connectDB = require("./config/db");
-const authRoutes = require("./routes/authRoutes");
-const contactRoutes = require("./routes/contactRoutes");
-const adminRoutes = require("./routes/adminRoutes");
-const productRoutes = require("./routes/productRoutes");
 
-
+dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 5000;
 
-// CORS must come before API routes
+// Allowed Frontend Origins
+
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://e-commerce-website-c9eh16f0t-neural21.vercel.app"
+];
+
 app.use(
   cors({
-    origin: "https://e-commerce-website-c9eh16f0t-neural21.vercel.app/",
+    origin: function (origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS: " + origin));
+      }
+    },
+    credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
+    allowedHeaders: ["Content-Type", "Authorization"]
   })
 );
 
-// Parse JSON request bodies
+
 app.use(express.json({ limit: "10kb" }));
 
-// API routes
+// Database Connection
+connectDB();
+
+// Routes
+const authRoutes = require("./routes/authRoutes");
+
 app.use("/api/auth", authRoutes);
-app.use("/api/orders", orderRoutes);
-app.use("/api/contact", contactRoutes);
-app.use("/api/admin", adminRoutes);
-app.use("/api/products", productRoutes);
 
-// Health check
-app.get("/", (req, res) => {
-  res.json({
-    success: true,
-    message: "ShopNest API is running!",
-  });
+// Server
+const PORT = process.env.PORT || 5000;
+
+app.listen(PORT, () => {
+  console.log(`ShopNest server running on port ${PORT}`);
 });
-
-const startServer = async () => {
-  try {
-    await connectDB();
-
-    app.listen(PORT, () => {
-      console.log(`ShopNest server running on port ${PORT}`);
-    });
-  } catch (error) {
-    console.error("Server startup failed:", error.message);
-    process.exit(1);
-  }
-};
-
-startServer();

@@ -2,6 +2,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { clearCart } from "../features/cart/cartSlice";
 import { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import API from "../utils/api";
 import {
   ArrowLeft,
   MapPin,
@@ -141,7 +142,7 @@ const handleSubmit = async (event) => {
   setIsSubmitting(true);
 
   try {
-    const response = await fetch("http://localhost:5000/api/orders", {
+   const response = await fetch(`${API}/api/orders`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
