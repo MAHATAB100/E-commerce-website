@@ -13,17 +13,26 @@ const app = express();
 // Allowed Frontend Origins
 
 const allowedOrigins = [
-  "http://localhost:5173",
+  /^http:\/\/localhost:\d+$/,
+  /^http:\/\/127\.0\.0\.1:\d+$/,
   "https://e-commerce-website-c9eh16f0t-neural21.vercel.app"
 ];
 
 app.use(
   cors({
-    origin: function (origin, callback) {
-      if (!origin || allowedOrigins.includes(origin)) {
+    origin: (origin, callback) => {
+      const isAllowed =
+        !origin ||
+        allowedOrigins.some((allowed) =>
+          typeof allowed === "string"
+            ? allowed === origin
+            : allowed.test(origin)
+        );
+
+      if (isAllowed) {
         callback(null, true);
       } else {
-        callback(new Error("Not allowed by CORS: " + origin));
+        callback(new Error(`Not allowed by CORS: ${origin}`));
       }
     },
     credentials: true,
